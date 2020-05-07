@@ -29,3 +29,5 @@ public class Test {
 	}
 
 }
+
+// src1:(dest1) src2:(dest2) src3:(dest3) src4:(dest4) 
