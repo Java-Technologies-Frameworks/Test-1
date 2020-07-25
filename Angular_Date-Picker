@@ -1,0 +1,142 @@
+import * as XLSX from 'xlsx'; 
+import { Component, OnInit } from '@angular/core';
+import { AuthService } from '../_services/auth-service.service';
+
+@Component({
+  selector: 'app-search',
+  templateUrl: './search.component.html',
+  styleUrls: ['./search.component.css']
+})
+export class SearchComponent implements OnInit {
+reverse: boolean = false;
+order = 'username';
+  users:any;
+  p: number = 1;
+  public search:any = '';
+  query: any;
+  fromDate: any;
+  public filters = <any>{
+    "to": '',
+    "from": '',
+  };
+  selectedMembers: any;
+  pattern = /(\d{2})\.(\d{2})\.(\d{4})/;
+  dateTable: boolean = false;
+  constructor(private authService: AuthService) { }
+
+  ngOnInit() {
+    this.getUser();
+    console.log(this.fromDate);
+   
+    // resp.subscribe((data)=>this.users=data);
+
+  }
+  getUser(){
+    this.authService.getUsers().subscribe(data=>{
+      this.users = data;
+      //this.sortBy('name');
+    });
+  }
+
+  public getByDate(event) {
+    let start =this.filters['from'] = event[0];
+    let end = this.filters['to'] = event[1];
+    console.log(this.filters['from'],'===',this.filters['to'])
+    this.selectedMembers = this.users.filter(m => 
+new Date(m.createdDate) >= new Date(start) && new Date(m.createdDate) <= new Date(end)
+);
+console.log(this.selectedMembers);
+if(this.selectedMembers.length >0){
+  this.dateTable = true;
+}
+  
+}
+
+
+fileName= 'ExcelSheet.xlsx';  
+exportexcel(): void 
+  {
+     /* table id is passed over here */   
+     let element = document.getElementById('excel-table'); 
+     const ws: XLSX.WorkSheet =XLSX.utils.table_to_sheet(element);
+
+     /* generate workbook and add the worksheet */
+     const wb: XLSX.WorkBook = XLSX.utils.book_new();
+     XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+
+     /* save to file */
+     XLSX.writeFile(wb, this.fileName);
+    
+  }
+
+}
+
+
+
+=======================================
+
+html file code 
+
+
+
+<app-navbar></app-navbar>
+<input type="text" class="form-control" style = 'width:500px'  placeholder="Search" [(ngModel)]="query" id="listSearch">
+<div class="form-group">
+    <div class="custom-control custom-checkbox">
+        <input type="checkbox" class="custom-control-input" [(ngModel)]="reverse" id="reverse" />
+        <label class="custom-control-label" for="reverse">Please click on me for sorting</label>
+    </div>
+</div>
+
+<div class="container" >
+<div class="container">
+    <div class="row col-md-6 col-md-offset-2 custyle">
+    <table id="excel-table" class="table table-bordered">
+    <thead>
+        <tr>
+            <!-- <th>Id &nbsp;&nbsp;<a><img src="assets/images/EY_Image.jpg" alt="logo" style="width:40px; [(ngModel)]='reverse'"></a></th> -->
+            <th>Id</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Registration Date</th>
+        </tr>
+    </thead>
+    <tbody *ngIf = '!dateTable'>
+        <tr *ngFor="let user of users | search: query | paginate: { itemsPerPage: 10, currentPage: p } | orderBy : order : reverse">
+            <td>{{user.id}}</td>
+            <td>{{user.username}}</td>
+            <td>{{user.email}}</td>
+            <td>{{user.createdDate }}</td>
+          </tr>
+    </tbody>
+    <tbody *ngIf = 'dateTable'>
+        <tr *ngFor="let user of selectedMembers | search: query | paginate: { itemsPerPage: 10, currentPage: p } | orderBy : order : reverse">
+            <td>{{user.id}}</td>
+            <td>{{user.username}}</td>
+            <td>{{user.email}}</td>
+            <td>{{user.createdDate }}</td>
+          </tr>
+    </tbody>
+    </table>
+    </div>
+</div>
+<pagination-controls (pageChange)="p = $event"></pagination-controls>
+<!-- <div>
+    <a class="nav-link" routerLink="/home">Home</a>
+</div> -->
+
+<div class="container">
+    <div class="row">
+      
+      <div class="col-xs-12 col-12 col-md-4 form-group">
+        <input type="text" placeholder="SELECT DATE" class="form-control" bsDaterangepicker (ngModelChange)="getByDate($event)"
+                            [(ngModel)]="this.filters.date">
+      </div>
+    </div>
+  </div>
+
+ 
+   
+    
+
+   
